@@ -9,7 +9,7 @@ const autoreply = (req, res) => {
 
   let from = "";
   let message = "";
-  console.log(req.method)
+
   if (req.method === "GET") {
     from = req.query.from;
     message = req.query.message;
@@ -23,7 +23,21 @@ const autoreply = (req, res) => {
     return res.status(400).json({ success: false, reason: "Bad Request" })
   }
 
-  const phoneNumber = from.split("@")[0];
+  const [isChat, phoneNumber] = from.includes("@c.us") ? [true, from.split("@")[0]] : [false, undefined]
+  const [isGroup, groupID] = from.includes("@g.us") ? [true, from.split("@")[0]] : [false, undefined]
+  // const [phoneNumber, source] = from.split("@");
+  // const [isChat, isGroup] = source.startsWith("c") ? [true, false] : source.startsWith("g") ? [false, true] : [false, false];
+
+  console.log(`new incoming message ${isGroup ? "from group" : ""}: `)
+  console.log({ timestamp: { miliseconds: Date.now(), iso: new Date().toISOString() } })
+  console.log({ from, message })
+
+  if (isGroup) {
+    console.log({ isGroup, groupID })
+    return res.json({ success: true, groupID });
+  }
+
+  console.log({ phoneNumber })
 
   // reply format, attachment is optional
   // const reply = {
@@ -50,7 +64,6 @@ const autoreply = (req, res) => {
   // list match
   // (info huta / tentang huta)
   const aboutTextList = [/info( tentang | profil | )huta(| fresh market)/gi, /(tentang|profil) huta/gi];
-
 
   if (message.match(greetingText)) {
     reply.message = "Halo Sobat Sehat Huta~💕 \n\nYuks belanja stok untuk kebutuhan pokoknya di Huta Fresh Market ajah✨😉 \n\nSilahkan pilih menu dibawah: \n- List Harga\n- Format Pesan\n- Rekening"
