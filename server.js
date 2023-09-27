@@ -33,7 +33,7 @@ const autoreply = (req, res) => {
   }
 
   if (!from || !message) {
-    return res.status(400).json({ success: false, reason: "Bad Request" })
+    return res.status(400).json({ success: false, message: "Bad Request" })
   }
 
   const [isChat, phoneNumber] = from.includes("@c.us") ? [true, from.split("@")[0]] : [false, undefined]
@@ -52,8 +52,8 @@ const autoreply = (req, res) => {
 
   console.log({ phoneNumber })
 
-  // reply format, attachment is optional
-  // const reply = {
+  // json response format, attachment is optional
+  // "data": {
   //   "message": "Halo juga",
   //   "attachment": [ 
   //     {
@@ -70,6 +70,11 @@ const autoreply = (req, res) => {
   const posblocVidBase64 = Buffer.from(readFileSync("./public/sample/Huta Fresh Market di Posbloc -resized.mp4")).toString("base64");
 
   const reply = {}
+
+  // prevent self message reply
+  if (process.env.PHONE_NUMBER.split(",").includes(phoneNumber)) {
+    return res.json({ success: true });
+  }
 
   // regex match 
   // (hai / halo admin)
@@ -101,7 +106,7 @@ const autoreply = (req, res) => {
     ]
     reply.attachment = attachment;
   } else {
-    reply.message = TEMPLATE_PESAN[message.toLowerCase()] || "_Ini adalah pesan otomatis_\n\nSilahkan balas dengan pilihan menu dibawah:\n- List Harga\n- Format Pesan\n -Rekening\n\nButuh informasi lebih lanjut? Hubungi admin di *wa.me/6289892700001*\n\n"
+    reply.message = TEMPLATE_PESAN[message.toLowerCase()] || "_Maaf saya belum paham yang kamu maksud_\n\nSilahkan kirim balasan sesuai pilihan berikut:\n-Halo/Hai admin\n- List Harga\n- Format Pesan\n -Rekening\n\nJika butuh informasi lebih lanjut, silahkan hubungi admin di *wa.me/6289892700001*\n\n"
   }
 
   return res.json({ data: reply });
