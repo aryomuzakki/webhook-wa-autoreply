@@ -1,9 +1,14 @@
 const express = require("express");
 const { readFileSync } = require("fs");
-
+const cors = require("cors");
 const app = express();
 
 const port = process.env.PORT || 5000;
+
+// cors
+app.use(cors({
+  origin: "https://web.whatsapp.com",
+}))
 
 const TEMPLATE_PESAN = {
   "list harga": "Pilih list harga yang ingin kamu lihat:\n- List harga buah\n- List harga sayur",
