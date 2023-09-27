@@ -104,7 +104,7 @@ const autoreply = (req, res) => {
     reply.message = TEMPLATE_PESAN[message.toLowerCase()] || "_Ini adalah pesan otomatis_\n\nSilahkan balas dengan pilihan menu dibawah:\n- List Harga\n- Format Pesan\n -Rekening\n\nButuh informasi lebih lanjut? Hubungi admin di *wa.me/6289892700001*\n\n"
   }
 
-  return res.json(reply);
+  return res.json({ data: reply });
 }
 
 app.get("/api/webhook/sebaran-wa/autoreply", autoreply);
