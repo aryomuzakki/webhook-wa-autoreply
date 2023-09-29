@@ -27,7 +27,7 @@ const autoreply = (req, res) => {
   }
 
   if (!from || !message) {
-    return res.status(400).json({ success: false, message: "Bad Request" })
+    return res.status(400).json({ success: false, message: "Bad Request! 'form' or 'message' is required in query or body" })
   }
 
   const [isChat, phoneNumber] = from.includes("@c.us") ? [true, from.split("@")[0]] : [false, undefined]
@@ -41,7 +41,7 @@ const autoreply = (req, res) => {
 
   if (isGroup) {
     console.log({ isGroup, groupID })
-    return res.json({ success: true, groupID });
+    return res.json({ message: "A message from a group", groupID });
   }
 
   console.log({ phoneNumber })
@@ -58,15 +58,25 @@ const autoreply = (req, res) => {
   //   ]
   // }
 
-  // prevent self message reply
-  const senderPhoneNumber = process.env.SENDER_PHONE_NUMBER || "";
+  // prevent self message reply // not working :(
+  const senderPhoneNumber = process.env.BOT_PHONE_NUMBER || "";
 
   if (senderPhoneNumber.split(",").includes(phoneNumber)) {
     console.log("this is a self send message")
-    return res.json({ success: true, message: "A self send message" });
+    return res.json({ message: "A self send message" });
   }
 
-  const reply = getReply(message);
+  // remove prefix
+  const incomingPrefixes = process.env.INCOMING_PREFIXES.split(",");
+  const prefix = incomingPrefixes.find(prx => message.startsWith(prx));
+  if (!prefix) {
+    console.log("no prefix match list: ", incomingPrefixes);
+    return res.json({ message: "No prefix match" });
+  }
+  const cleanMessage = message.replace(prefix, "").trim();
+
+  // get reply
+  const reply = getReply(cleanMessage);
 
   return res.json({ data: reply });
 }
