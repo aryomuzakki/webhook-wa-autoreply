@@ -1,4 +1,5 @@
-const { readFileSync } = require("fs");
+import { readFileSync } from "fs";
+import { join as pathJoin } from "path";
 
 const DEFAULT_MESSAGE = "_Maaf saya belum paham yang kamu maksud_\n\nSilahkan kirim balasan sesuai pilihan berikut:\n*!! Halo/Hai admin*\n*!! List Harga*\n*!! Format Pesan*\n -Rekening\n\nJika butuh informasi lebih lanjut, silahkan hubungi admin di *6289892700001* atau klik *wa.me/6289892700001*\n\n";
 
@@ -32,9 +33,10 @@ const getAttachment = (msg, phoneNumberOrGroupID) => {
 
   if (aboutTextList.some(aboutText => msg.match(aboutText))) {
     // load file
-    const logoBase64 = Buffer.from(readFileSync("./public/sample/Huta Fresh Market -bg putih.png")).toString("base64");
-    const pdfProfileBase64 = Buffer.from(readFileSync("./public/sample/Proposal B2B Huta -sample -resized.pdf")).toString("base64");
-    const posblocVidBase64 = Buffer.from(readFileSync("./public/sample/Huta Fresh Market di Posbloc -resized.mp4")).toString("base64");
+    const sampleDir = pathJoin(process.cwd(), 'src/sample');
+    const logoBase64 = Buffer.from(readFileSync(`${sampleDir}/Huta Fresh Market -bg putih.png`)).toString("base64");
+    const pdfProfileBase64 = Buffer.from(readFileSync(`${sampleDir}/Proposal B2B Huta -sample -resized.pdf`)).toString("base64");
+    const posblocVidBase64 = Buffer.from(readFileSync(`${sampleDir}/Huta Fresh Market di Posbloc -resized.mp4`)).toString("base64");
 
     attachment.push(...[
       {
@@ -58,7 +60,7 @@ const getAttachment = (msg, phoneNumberOrGroupID) => {
   return attachment.length > 0 ? attachment : undefined;
 }
 
-const getReply = (msg, phoneNumberOrGroupID) => {
+export const getReply = (msg, phoneNumberOrGroupID) => {
 
   const generatedMsg = generateMessage(msg, phoneNumberOrGroupID);
 
@@ -66,6 +68,3 @@ const getReply = (msg, phoneNumberOrGroupID) => {
 
   return { message: generatedMsg, attachment }
 }
-
-
-module.exports = { getReply }

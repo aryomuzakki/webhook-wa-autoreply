@@ -1,33 +1,34 @@
-require("dotenv").config()
-const express = require("express");
-const { readFileSync } = require("fs");
-const cors = require("cors");
-const { getReply } = require("./src/reply");
-const app = express();
+import { getReply } from "@/lib/reply";
+import { NextResponse } from "next/server";
 
-const port = process.env.PORT || 5000;
-
-// cors
-app.use(cors({
-  origin: "https://web.whatsapp.com",
-}))
-
-const autoreply = (req, res) => {
-
-  let from = "";
-  let message = "";
-
-  if (req.method === "GET") {
-    from = req.query.from;
-    message = req.query.message;
+export async function GET(request, { params }) {
+  if (params.slug.join("/") === "sebaran-wa/autoreply") {
+    return autoreply({
+      req: request,
+      from: request.nextUrl.searchParams.get("from"),
+      message: request.nextUrl.searchParams.get("message"),
+    })
   }
-  if (req.method === "POST") {
-    from = req.body.from;
-    message = req.body.message;
+  return NextResponse.json({ message: "nothing to see here, go away" })
+}
+
+export async function POST(request, { params }) {
+  if (params.slug.join("/") === "sebaran-wa/autoreply") {
+    const reqBody = await request.json();
+
+    return autoreply({
+      req: request,
+      from: reqBody.from,
+      message: reqBody.message,
+    })
   }
+  return NextResponse.json({ message: "nothing to see here, go away" })
+}
+
+const autoreply = ({ req, from, message }) => {
 
   if (!from || !message) {
-    return res.status(400).json({ success: false, message: "Bad Request! 'form' or 'message' is required in query or body" })
+    return NextResponse.json({ success: false, message: "Bad Request! 'from' or 'message' is required in query or body" }, { status: 400 });
   }
 
   const [isChat, phoneNumber] = from.includes("@c.us") ? [true, from.split("@")[0]] : [false, undefined]
@@ -41,7 +42,7 @@ const autoreply = (req, res) => {
 
   if (isGroup) {
     console.log({ isGroup, groupID })
-    return res.json({ message: "A message from a group", groupID });
+    return NextResponse.json({ message: "A message from a group", groupID });
   }
 
   console.log({ phoneNumber })
@@ -63,7 +64,7 @@ const autoreply = (req, res) => {
 
   if (senderPhoneNumber.split(",").includes(phoneNumber)) {
     console.log("this is a self send message")
-    return res.json({ message: "A self send message" });
+    return NextResponse.json({ message: "A self send message" });
   }
 
   // remove prefix
@@ -71,19 +72,12 @@ const autoreply = (req, res) => {
   const prefix = incomingPrefixes.find(prx => message.startsWith(prx));
   if (!prefix) {
     console.log("no prefix match list: ", incomingPrefixes);
-    return res.json({ message: "No prefix match" });
+    return NextResponse.json({ message: "No prefix match" });
   }
   const cleanMessage = message.replace(prefix, "").trim();
 
   // get reply
   const reply = getReply(cleanMessage);
 
-  return res.json({ data: reply });
+  return NextResponse.json({ data: reply });
 }
-
-app.get("/api/webhook/sebaran-wa/autoreply", autoreply);
-app.post("/api/webhook/sebaran-wa/autoreply", autoreply);
-
-app.listen(port, () => {
-  console.log("Server started");
-})
